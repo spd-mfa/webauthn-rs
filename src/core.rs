@@ -193,6 +193,7 @@ impl<T> Webauthn<T> {
                 authenticator_selection: Some(AuthenticatorSelectionCriteria {
                     authenticator_attachment: self.config.get_authenticator_attachment(),
                     require_resident_key: self.config.get_require_resident_key(),
+                    resident_key: self.config.get_resident_key(),
                     user_verification: policy.clone(),
                 }),
                 extensions: None,
@@ -895,6 +896,12 @@ pub trait WebauthnConfig {
     /// the credentials. This is not a security enforcement.
     fn get_require_resident_key(&self) -> bool {
         false
+    }
+
+    /// Get the configuration for the extent to which the Relying Party desires to create a
+    /// client-side discoverable credential
+    fn get_resident_key(&self) -> ResidentKeyRequirement {
+        ResidentKeyRequirement::Preferred
     }
 
     /// If the attestation format is not supported, should we ignore verifying the attestation

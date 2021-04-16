@@ -291,6 +291,26 @@ pub enum UserVerificationPolicy {
     Discouraged,
 }
 
+/// This enumeration’s values describe the Relying Party's requirements for client-side
+/// discoverable credentials (formerly known as resident credentials or resident keys):
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[allow(non_camel_case_types)]
+#[serde(rename_all = "lowercase")]
+pub enum ResidentKeyRequirement {
+    /// This value indicates the Relying Party requires a client-side discoverable credential,
+    /// and is prepared to receive an error if a client-side discoverable credential cannot be created.
+    Required,
+    /// This value indicates the Relying Party strongly prefers creating a client-side
+    /// discoverable credential, but will accept a server-side credential. For example,
+    /// user agents SHOULD guide the user through setting up user verification if needed
+    /// to create a client-side discoverable credential in this case. This takes precedence
+    /// over the setting of userVerification.
+    Preferred,
+    /// This value indicates the Relying Party prefers creating a server-side credential,
+    /// but will accept a client-side discoverable credential.
+    Discouraged,
+}
+
 // These are the primary communication structures you will need to handle.
 pub(crate) type JSONExtensions = BTreeMap<String, String>;
 
@@ -389,12 +409,18 @@ pub struct AuthenticatorSelectionCriteria {
     /// https://www.w3.org/TR/webauthn/#resident-credential
     pub require_resident_key: bool,
 
+    /// Specifies the extent to which the Relying Party desires to create a client-side discoverable credential.
+    /// For historical reasons the naming retains the deprecated “resident” terminology.
+    /// The value SHOULD be a member of ResidentKeyRequirement but client platforms MUST ignore unknown values,
+    /// treating an unknown value as if the member does not exist. If no value is given then the effective value
+    /// is required if requireResidentKey is true or discouraged if it is false or absent.
+    pub resident_key: ResidentKeyRequirement,
+
     /// The user verification level to request during registration. Depending on if this
     /// authenticator provides verification may affect future interactions as this is
     /// associated to the credential during registration.
     pub user_verification: UserVerificationPolicy,
 }
-
 /// The authenticator attachment hint. This is NOT enforced, and is only used
 /// to help a user select a relevant authenticator type.
 ///
@@ -579,7 +605,7 @@ impl RequestChallengeResponse {
         relaying_party: String,
         allow_credentials: Vec<AllowCredentials>,
         user_verification_policy: UserVerificationPolicy,
-        extensions: Option<JSONExtensions>
+        extensions: Option<JSONExtensions>,
     ) -> Self {
         RequestChallengeResponse {
             public_key: PublicKeyCredentialRequestOptions {
@@ -758,7 +784,6 @@ pub(crate) struct AttestationObjectInner<'a> {
     pub(crate) fmt: String,
     pub(crate) att_stmt: serde_cbor::Value,
 }
-
 
 /// Attestation Object
 #[derive(Debug)]
