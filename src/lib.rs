@@ -14,6 +14,7 @@
 //! interactions.
 
 #![deny(warnings)]
+#![allow(dead_code)]
 #![warn(unused_extern_crates)]
 #![warn(missing_docs)]
 

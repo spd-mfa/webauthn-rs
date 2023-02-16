@@ -312,7 +312,7 @@ pub enum ResidentKeyRequirement {
 }
 
 // These are the primary communication structures you will need to handle.
-pub(crate) type JSONExtensions = BTreeMap<String, String>;
+pub(crate) type JSONExtensions = BTreeMap<String, serde_json::Value>;
 
 /// Relying Party Entity
 #[derive(Debug, Serialize, Clone, Deserialize)]
