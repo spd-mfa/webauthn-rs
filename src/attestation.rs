@@ -270,7 +270,7 @@ pub(crate) fn verify_fidou2f_attestation(
 
     // Let verificationData be the concatenation of (0x00 || rpIdHash || clientDataHash || credentialId || publicKeyU2F) (see Section 4.3 of [FIDO-U2F-Message-Formats]).
     let r: [u8; 1] = [0x00];
-    let verification_data: Vec<u8> = (&r)
+    let verification_data: Vec<u8> = r
         .iter()
         .chain(rp_id_hash.iter())
         .chain(client_data_hash.iter())

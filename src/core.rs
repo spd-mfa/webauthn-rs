@@ -1081,6 +1081,7 @@ pub trait WebauthnConfig {
     /// will "blindly trust" self attestation and the other types as valid.
     /// If you have strict security requirements we strongly recommend you implement this function,
     /// and we may in the future provide a stronger default relying party policy.
+    #[allow(clippy::result_unit_err)]
     fn policy_verify_trust(&self, pad: ParsedAttestationData) -> Result<(), ()> {
         debug!("policy_verify_trust -> {:?}", pad);
         match pad {
@@ -2211,7 +2212,6 @@ mod tests {
                 .map(|cred| {
                     cred.verified = true;
                     cred.registration_policy = UserVerificationPolicy::Required;
-                    ()
                 })
                 .unwrap();
             creds
@@ -2219,7 +2219,6 @@ mod tests {
                 .map(|cred| {
                     cred.verified = true;
                     cred.registration_policy = UserVerificationPolicy::Required;
-                    ()
                 })
                 .unwrap();
         }
@@ -2237,7 +2236,6 @@ mod tests {
                 .map(|cred| {
                     cred.verified = true;
                     cred.registration_policy = UserVerificationPolicy::Discouraged;
-                    ()
                 })
                 .unwrap();
             creds
@@ -2245,7 +2243,6 @@ mod tests {
                 .map(|cred| {
                     cred.verified = false;
                     cred.registration_policy = UserVerificationPolicy::Discouraged;
-                    ()
                 })
                 .unwrap();
         }

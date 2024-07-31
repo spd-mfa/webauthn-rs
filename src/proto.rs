@@ -39,9 +39,9 @@ impl Challenge {
     }
 }
 
-impl Into<Base64UrlSafeData> for Challenge {
-    fn into(self) -> Base64UrlSafeData {
-        Base64UrlSafeData(self.0)
+impl From<Challenge> for Base64UrlSafeData {
+    fn from(val: Challenge) -> Self {
+        Base64UrlSafeData(val.0)
     }
 }
 
@@ -379,7 +379,7 @@ impl PartialEq<Credential> for Credential {
 /// As UserVerificationPolicy is *only* used in credential registration, this stores the
 /// verification state of the credential in the persisted credential. These persisted
 /// credentials define which UserVerificationPolicy is issued during authentications.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Default, Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
 #[allow(non_camel_case_types)]
 #[serde(rename_all = "lowercase")]
 pub enum UserVerificationPolicy {
@@ -395,15 +395,11 @@ pub enum UserVerificationPolicy {
     #[serde(rename = "preferred")]
     Preferred_DO_NOT_USE,
     /// Request that no verification is performed, and fail if it is. This is intended to
-    /// minimise user interaction in workflows, but is potentially a security risk to use.
+    /// minimize user interaction in workflows, but is potentially a security risk to use.
+    #[default]
     Discouraged,
 }
 
-impl Default for UserVerificationPolicy {
-    fn default() -> Self {
-        UserVerificationPolicy::Discouraged
-    }
-}
 
 /// Relying Party Entity
 #[derive(Debug, Serialize, Clone, Deserialize)]
@@ -891,12 +887,13 @@ pub struct CreationChallengeResponse {
 }
 
 #[cfg(feature = "wasm")]
-impl Into<web_sys::CredentialCreationOptions> for CreationChallengeResponse {
-    fn into(self) -> web_sys::CredentialCreationOptions {
-        let chal = Uint8Array::from(self.public_key.challenge.0.as_slice());
-        let userid = Uint8Array::from(self.public_key.user.id.0.as_slice());
+impl From<CreationChallengeResponse> for web_sys::CredentialCreationOptions {
+    fn from(val: CreationChallengeResponse) -> Self {
+        let chal = Uint8Array::from(val.public_key.challenge.0.as_slice());
+        let userid = Uint8Array::from(val.public_key.user.id.0.as_slice());
 
-        let jsv = JsValue::from_serde(&self).unwrap();
+        #[allow(deprecated)]
+        let jsv = JsValue::from_serde(&val).unwrap();
 
         let pkcco = js_sys::Reflect::get(&jsv, &"publicKey".into()).unwrap();
         js_sys::Reflect::set(&pkcco, &"challenge".into(), &chal).unwrap();
@@ -904,7 +901,7 @@ impl Into<web_sys::CredentialCreationOptions> for CreationChallengeResponse {
         let user = js_sys::Reflect::get(&pkcco, &"user".into()).unwrap();
         js_sys::Reflect::set(&user, &"id".into(), &userid).unwrap();
 
-        if let Some(extensions) = self.public_key.extensions {
+        if let Some(extensions) = val.public_key.extensions {
             if let Some(cred_blob) = extensions.cred_blob {
                 let exts = js_sys::Reflect::get(&pkcco, &"extensions".into()).unwrap();
                 let cred_blob = Uint8Array::from(cred_blob.0.as_ref());
@@ -946,10 +943,10 @@ pub struct RequestChallengeResponse {
 }
 
 #[cfg(feature = "wasm")]
-impl Into<web_sys::CredentialRequestOptions> for RequestChallengeResponse {
-    fn into(self) -> web_sys::CredentialRequestOptions {
-        let chal = Uint8Array::from(self.public_key.challenge.0.as_slice());
-        let allow_creds: Array = self
+impl From<RequestChallengeResponse> for web_sys::CredentialRequestOptions {
+    fn from(val: RequestChallengeResponse) -> Self {
+        let chal = Uint8Array::from(val.public_key.challenge.0.as_slice());
+        let allow_creds: Array = val
             .public_key
             .allow_credentials
             .iter()
@@ -974,7 +971,8 @@ impl Into<web_sys::CredentialRequestOptions> for RequestChallengeResponse {
             })
             .collect();
 
-        let jsv = JsValue::from_serde(&self).unwrap();
+        #[allow(deprecated)]
+        let jsv = JsValue::from_serde(&val).unwrap();
 
         let pkcco = js_sys::Reflect::get(&jsv, &"publicKey".into()).unwrap();
         js_sys::Reflect::set(&pkcco, &"challenge".into(), &chal).unwrap();
@@ -1494,7 +1492,7 @@ impl From<web_sys::PublicKeyCredential> for PublicKeyCredential {
             Base64UrlSafeData(data_response_authenticator_data);
         let data_response_signature_b64 = Base64UrlSafeData(data_response_signature);
 
-        let data_response_user_handle_b64 = data_response_user_handle.map(|d| Base64UrlSafeData(d));
+        let data_response_user_handle_b64 = data_response_user_handle.map(Base64UrlSafeData);
 
         PublicKeyCredential {
             id: format!("{}", data_raw_id_b64),

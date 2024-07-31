@@ -24,14 +24,14 @@ impl fmt::Display for Base64UrlSafeData {
         write!(
             f,
             "{}",
-            base64::encode_config(&self, base64::URL_SAFE_NO_PAD)
+            base64::encode_config(self, base64::URL_SAFE_NO_PAD)
         )
     }
 }
 
-impl Into<Vec<u8>> for Base64UrlSafeData {
-    fn into(self) -> Vec<u8> {
-        self.0
+impl From<Base64UrlSafeData> for Vec<u8> {
+    fn from(val: Base64UrlSafeData) -> Self {
+        val.0
     }
 }
 
@@ -92,7 +92,7 @@ impl Serialize for Base64UrlSafeData {
     where
         S: Serializer,
     {
-        let encoded = base64::encode_config(&self, base64::URL_SAFE_NO_PAD);
+        let encoded = base64::encode_config(self, base64::URL_SAFE_NO_PAD);
         serializer.serialize_str(&encoded)
     }
 }

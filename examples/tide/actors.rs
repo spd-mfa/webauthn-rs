@@ -65,10 +65,9 @@ impl WebauthnActor {
     ) -> WebauthnResult<RequestChallengeResponse> {
         debug!("handle ChallengeAuthenticate -> {:?}", username);
 
-        let creds = match self.creds.lock().await.get(&username.as_bytes().to_vec()) {
-            Some(creds) => Some(creds.iter().map(|(_, v)| v.clone()).collect()),
-            None => None,
-        }
+        let creds = self.creds.lock().await
+        .get(&username.as_bytes().to_vec())
+        .map(|creds| creds.iter().map(|(_, v)| v.clone()).collect())
         .ok_or(WebauthnError::CredentialRetrievalError)?;
 
         let exts = RequestAuthenticationExtensions::builder()
@@ -167,7 +166,6 @@ impl WebauthnActor {
                         Err(())
                     }
                 };
-                ()
             });
         debug!("complete Authenticate -> {:?}", r);
         r
