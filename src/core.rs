@@ -765,6 +765,11 @@ impl<T> Webauthn<T> {
             .partition(|cred| cred.registration_policy == UserVerificationPolicy::Required);
 
         match (verified.len(), unverified.len()) {
+            (0,0) => self.generate_challenge_authenticate_inner(
+                Vec::new(),
+                UserVerificationPolicy::Preferred_DO_NOT_USE,
+                extensions,
+            ),
             (_, 0) => self.generate_challenge_authenticate_inner(
                 verified,
                 UserVerificationPolicy::Required,

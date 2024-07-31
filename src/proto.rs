@@ -579,6 +579,11 @@ pub struct RequestAuthenticationExtensions {
     /// The `appid` extension options
     #[serde(skip_serializing_if = "Option::is_none")]
     pub appid: Option<String>,
+
+    /// Other extension data without an explicit schema,
+    /// allowing clients to add arbitrary data to the extensions.
+    #[serde(flatten)]
+    pub arbitrary_extensions: Option<serde_cbor::Value>
 }
 
 impl RequestAuthenticationExtensions {
@@ -597,6 +602,7 @@ impl RequestAuthenticationExtensionsBuilder {
         Self(RequestAuthenticationExtensions {
             get_cred_blob: Some(CredBlobGet(false)),
             appid: None,
+            arbitrary_extensions: None
         })
     }
 
@@ -636,6 +642,13 @@ impl RequestAuthenticationExtensionsBuilder {
         self.0.appid = Some(appid);
         self
     }
+
+    /// Set arbitrary extension data options
+    pub fn set_arbitrary_extensions(mut self, extensions: serde_cbor::Value) -> Self {
+        self.0.arbitrary_extensions = Some(extensions);
+        self
+    }
+    
 }
 
 /// Extension option inputs for [PublicKeyCredentialCreationOptions].
@@ -651,6 +664,11 @@ pub struct RequestRegistrationExtensions {
     /// The `credBlob` extension options
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cred_blob: Option<CredBlobSet>,
+
+    /// Other extension data without an explicit schema, 
+    /// allowing clients to add arbitrary data to the extensions.
+    #[serde(flatten)]
+    pub arbitrary_extensions:  Option<serde_cbor::Value>
 }
 
 impl RequestRegistrationExtensions {
@@ -669,6 +687,7 @@ impl RequestRegistrationExtensionsBuilder {
         Self(RequestRegistrationExtensions {
             cred_protect: None,
             cred_blob: None,
+            arbitrary_extensions: None
         })
     }
 
@@ -713,6 +732,12 @@ impl RequestRegistrationExtensionsBuilder {
         self.0.cred_blob = Some(CredBlobSet(Base64UrlSafeData(cred_blob)));
         self
     }
+    
+    /// Set arbitrary extension data options
+    pub fn set_arbitrary_extensions(mut self, extensions: serde_cbor::Value) -> Self {
+        self.0.arbitrary_extensions = Some(extensions);
+        self
+    }
 }
 
 /// The output for registration ceremony extensions.
@@ -737,6 +762,11 @@ pub struct RegistrationSignedExtensions {
 pub struct AuthenticationSignedExtensions {
     /// The credBlob extension
     pub cred_blob: Option<GetCredBlobResponse>,
+
+    /// Other extension data without an explicit schema, 
+    /// allowing clients to add arbitrary data to the extensions.
+    #[serde(flatten)]
+    pub arbitrary_extensions:  Option<serde_cbor::Value>
 }
 
 impl Ceremony for Registration {
@@ -1090,6 +1120,19 @@ pub struct AuthenticatorData<T: Ceremony> {
     pub(crate) acd: Option<AttestedCredentialData>,
     /// Extensions supplied by the device.
     pub(crate) extensions: Option<T::SignedExtensions>,
+}
+
+impl AuthenticatorData<Authentication> {
+    /// Get an extension value for an identifier within the arbitrary extensions map
+    pub fn get_extension_for_identifier(&self, id: String) -> Option<&[u8]> {
+        self.extensions
+            .as_ref()
+            .and_then(|v| v.arbitrary_extensions.as_ref())
+            .and_then(|v| cbor_try_map!(v).ok())
+            .and_then(|map| map.get(&serde_cbor::Value::Text(id)))
+            .and_then(|v| cbor_try_bytes!(v).ok())
+            .map(|v| v.as_slice())
+    }
 }
 
 /// The processed Attestation that the Authenticator is providing in it's AttestedCredentialData
