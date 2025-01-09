@@ -348,7 +348,8 @@ pub struct SecurityKeyRegistration {
     derive(Serialize, Deserialize)
 )]
 pub struct SecurityKeyAuthentication {
-    pub(crate) ast: AuthenticationState,
+    /// Made public so we can can call set_allowed_credentials on its interior type
+    pub ast: AuthenticationState,
 }
 
 /// A Security Key for a user. These are the legacy "second factor" method of security tokens.

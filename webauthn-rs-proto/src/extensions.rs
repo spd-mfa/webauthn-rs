@@ -1,5 +1,7 @@
 //! Extensions allowing certain types of authenticators to provide supplemental information.
 
+use std::collections::BTreeMap;
+
 use base64urlsafedata::Base64UrlSafeData;
 use serde::{Deserialize, Serialize};
 
@@ -414,4 +416,8 @@ impl RegisteredExtensions {
 
 /// The set of extensions that were provided by the client during authentication
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct AuthenticationExtensions {}
+pub struct AuthenticationExtensions {
+    /// Custom extensions 
+    #[serde(flatten)]
+    pub unknown_keys: BTreeMap<String, serde_cbor_2::Value>,
+}
