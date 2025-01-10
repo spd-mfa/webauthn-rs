@@ -190,7 +190,7 @@ extern crate tracing;
 
 mod interface;
 
-use std::time::Duration;
+use std::{collections::BTreeMap, time::Duration};
 use url::Url;
 use uuid::Uuid;
 use webauthn_rs_core::error::{WebauthnError, WebauthnResult};
@@ -999,6 +999,47 @@ impl Webauthn {
     ) -> WebauthnResult<AuthenticationResult> {
         self.core.authenticate_credential(reg, &state.ast)
     }
+
+    /// Given a set of [SecurityKey], begin an authentication of the user. This returns
+    /// a `RequestChallengeResponse`, which should be serialised to json and sent to the user agent (e.g. a browser).
+    /// The server must persist the [SecurityKeyAuthentication] state as it is paired to the
+    /// `RequestChallengeResponse` and required to complete the authentication.
+    ///
+    /// Finally you need to call [`finish_securitykey_authentication`](Webauthn::finish_securitykey_authentication)
+    /// to complete the authentication.
+    ///
+    /// WARNING ⚠️  YOU MUST STORE THE [SecurityKeyAuthentication] VALUE SERVER SIDE.
+    ///
+    /// Failure to do so *may* open you to replay attacks which can significantly weaken the
+    /// security of this system.
+    pub fn start_securitykey_with_custom_extensions_authentication(
+        &self,
+        creds: &[SecurityKey],
+        custom: Option<BTreeMap<String, serde_cbor_2::Value>>
+    ) -> WebauthnResult<(RequestChallengeResponse, SecurityKeyAuthentication)> {
+        let extensions = custom.map(|custom| RequestAuthenticationExtensions { appid: None, uvm: None, hmac_get_secret: None, custom });
+        let creds = creds.iter().map(|sk| sk.cred.clone()).collect();
+        let allow_backup_eligible_upgrade = false;
+
+        let policy = if self.user_presence_only_security_keys {
+            Some(UserVerificationPolicy::Discouraged_DO_NOT_USE)
+        } else {
+            Some(UserVerificationPolicy::Preferred)
+        };
+
+        let hints = Some(vec![PublicKeyCredentialHints::SecurityKey]);
+
+        self.core
+            .new_challenge_authenticate_builder(creds, policy)
+            .map(|builder| {
+                builder
+                    .extensions(extensions)
+                    .allow_backup_eligible_upgrade(allow_backup_eligible_upgrade)
+                    .hints(hints)
+            })
+            .and_then(|b| self.core.generate_challenge_authenticate(b))
+            .map(|(rcr, ast)| (rcr, SecurityKeyAuthentication { ast }))
+    }
 }
 
 #[cfg(any(all(doc, not(doctest)), feature = "attestation"))]
@@ -1256,6 +1297,7 @@ impl Webauthn {
             appid: None,
             uvm: Some(true),
             hmac_get_secret: None,
+            custom: BTreeMap::new() 
         });
 
         let policy = Some(UserVerificationPolicy::Required);
@@ -1323,6 +1365,7 @@ impl Webauthn {
             appid: None,
             uvm: Some(true),
             hmac_get_secret: None,
+            custom: BTreeMap::new() 
         });
         let allow_backup_eligible_upgrade = false;
         let hints = None;
@@ -1500,6 +1543,7 @@ impl Webauthn {
             appid: None,
             uvm: Some(true),
             hmac_get_secret: None,
+            custom: BTreeMap::new() 
         });
 
         let policy = Some(UserVerificationPolicy::Required);
