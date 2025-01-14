@@ -3,7 +3,7 @@ extern crate tracing;
 
 #[cfg(feature = "softtoken")]
 use std::fs::OpenOptions;
-use std::io::{stdin, stdout, Write};
+use std::{collections::BTreeMap, io::{stdin, stdout, Write}};
 use std::time::Duration;
 
 use clap::clap_derive::ValueEnum;
@@ -286,6 +286,7 @@ async fn main() {
                     appid: Some("example.app.id".to_string()),
                     uvm: None,
                     hmac_get_secret: None,
+                    custom: BTreeMap::new() 
                 }))
             })
             .and_then(|b| wan.generate_challenge_authenticate(b))

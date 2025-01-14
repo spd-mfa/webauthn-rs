@@ -215,7 +215,9 @@ pub(crate) fn process_authentication_extensions(
     auth_extn: &AuthenticationSignedExtensions,
 ) -> AuthenticationExtensions {
     trace!(?auth_extn);
-    AuthenticationExtensions {}
+    AuthenticationExtensions {
+        unknown_keys: auth_extn.unknown_keys.clone()
+    }
 }
 
 /*

@@ -1,5 +1,7 @@
 //! Extensions allowing certain types of authenticators to provide supplemental information.
 
+use std::collections::BTreeMap;
+
 use base64urlsafedata::Base64UrlSafeData;
 use serde::{Deserialize, Serialize};
 
@@ -182,6 +184,10 @@ pub struct RequestAuthenticationExtensions {
     /// Hmac get secret
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hmac_get_secret: Option<HmacGetSecretInput>,
+    
+    /// Custom extensions
+    #[serde(flatten)]
+    pub custom: BTreeMap<String, serde_cbor_2::Value> 
 }
 
 // Unable to create from, because it's an out of crate struct
@@ -197,6 +203,7 @@ impl Into<js_sys::Object> for &RequestAuthenticationExtensions {
             appid: _,
             uvm,
             hmac_get_secret,
+            custom: _
         } = self;
 
         let obj = Object::new();
@@ -415,4 +422,8 @@ impl RegisteredExtensions {
 
 /// The set of extensions that were provided by the client during authentication
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct AuthenticationExtensions {}
+pub struct AuthenticationExtensions {
+    /// Custom extensions 
+    #[serde(flatten)]
+    pub unknown_keys: BTreeMap<String, serde_cbor_2::Value>,
+}
