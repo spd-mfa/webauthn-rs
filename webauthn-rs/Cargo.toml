@@ -36,6 +36,7 @@ url = { workspace = true, features = ["serde"] }
 tracing.workspace = true
 serde.workspace = true
 uuid = { workspace = true, features = ["v4", "serde"] }
+serde_cbor_2.workspace = true
 
 [dev-dependencies]
 webauthn-rs-device-catalog.workspace = true
