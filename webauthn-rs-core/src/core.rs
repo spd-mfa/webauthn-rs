@@ -892,10 +892,10 @@ impl WebauthnCore {
 
         // OUT OF SPEC - It is invalid for a credential to indicate it is backed up
         // but not that it is elligible for backup
-        if data.authenticator_data.backup_state && !cred.backup_eligible {
-            error!("Credential indicates it is backed up, but has not declared valid backup eligibility");
-            return Err(WebauthnError::CredentialMayNotBeHardwareBound);
-        }
+        // if data.authenticator_data.backup_state && !cred.backup_eligible {
+        //     error!("Credential indicates it is backed up, but has not declared valid backup eligibility");
+        //     return Err(WebauthnError::CredentialMayNotBeHardwareBound);
+        // }
 
         // Verify that the values of the client extension outputs in clientExtensionResults and the
         // authenticator extension outputs in the extensions in authData are as expected, considering
