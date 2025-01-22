@@ -890,6 +890,9 @@ impl WebauthnCore {
             }
         }
 
+        // TODO @nikhilty @hgzimmerman: Apple ID sets the cred.backup_eligible incorrectly and for that reason this needs 
+        // to be commented out until we can find a better solution.
+
         // OUT OF SPEC - It is invalid for a credential to indicate it is backed up
         // but not that it is elligible for backup
         // if data.authenticator_data.backup_state && !cred.backup_eligible {
