@@ -958,7 +958,7 @@ impl Webauthn {
     ) -> WebauthnResult<(RequestChallengeResponse, SecurityKeyAuthentication)> {
         let extensions = None;
         let creds = creds.iter().map(|sk| sk.cred.clone()).collect();
-        let allow_backup_eligible_upgrade = false;
+        let allow_backup_eligible_upgrade = true;
 
         let policy = if self.user_presence_only_security_keys {
             Some(UserVerificationPolicy::Discouraged_DO_NOT_USE)
@@ -1019,7 +1019,7 @@ impl Webauthn {
     ) -> WebauthnResult<(RequestChallengeResponse, SecurityKeyAuthentication)> {
         let extensions = custom.map(|custom| RequestAuthenticationExtensions { appid: None, uvm: None, hmac_get_secret: None, custom });
         let creds = creds.iter().map(|sk| sk.cred.clone()).collect();
-        let allow_backup_eligible_upgrade = false;
+        let allow_backup_eligible_upgrade = true;
 
         let policy = if self.user_presence_only_security_keys {
             Some(UserVerificationPolicy::Discouraged_DO_NOT_USE)
