@@ -958,7 +958,7 @@ impl Webauthn {
     ) -> WebauthnResult<(RequestChallengeResponse, SecurityKeyAuthentication)> {
         let extensions = None;
         let creds = creds.iter().map(|sk| sk.cred.clone()).collect();
-        let allow_backup_eligible_upgrade = true;
+        let allow_backup_eligible_upgrade = false;
 
         let policy = if self.user_presence_only_security_keys {
             Some(UserVerificationPolicy::Discouraged_DO_NOT_USE)
@@ -1027,7 +1027,7 @@ impl Webauthn {
             Some(UserVerificationPolicy::Preferred)
         };
 
-        let hints = Some(vec![PublicKeyCredentialHints::SecurityKey]);
+        let hints = None;
 
         self.core
             .new_challenge_authenticate_builder(creds, policy)
