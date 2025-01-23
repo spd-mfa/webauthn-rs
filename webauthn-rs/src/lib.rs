@@ -902,7 +902,7 @@ impl Webauthn {
             .user_verification_policy(policy)
             .reject_synchronised_authenticators(false)
             .exclude_credentials(exclude_credentials)
-            .hints(Some(vec![PublicKeyCredentialHints::Hybrid]))
+            .hints(Some(vec![PublicKeyCredentialHints::ClientDevice]))
             .extensions(extensions);
 
         self.core
