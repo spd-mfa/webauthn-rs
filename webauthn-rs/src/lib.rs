@@ -539,6 +539,9 @@ impl Webauthn {
         user_display_name: &str,
         exclude_credentials: Option<Vec<CredentialID>>,
     ) -> WebauthnResult<(CreationChallengeResponse, PasskeyRegistration)> {
+
+
+        debug!("Starting passkey registration for user {}", user_name);
         let extensions = Some(RequestRegistrationExtensions {
             cred_protect: Some(CredProtect {
                 // Since this may contain PII, we want to enforce this. We also
@@ -603,6 +606,8 @@ impl Webauthn {
         user_display_name: &str,
         exclude_credentials: Option<Vec<CredentialID>>,
     ) -> WebauthnResult<(CreationChallengeResponse, PasskeyRegistration)> {
+
+        debug!("Starting Google Passkey in Google Password Manager registration for user {}", user_name);
         let extensions = Some(RequestRegistrationExtensions {
             // Android doesn't support cred protect.
             cred_protect: None,
@@ -844,6 +849,9 @@ impl Webauthn {
         attestation_ca_list: Option<AttestationCaList>,
         ui_hint_authenticator_attachment: Option<AuthenticatorAttachment>,
     ) -> WebauthnResult<(CreationChallengeResponse, SecurityKeyRegistration)> {
+
+        debug!("Starting security key registration for user {}", user_name);
+
         let attestation = if let Some(ca_list) = attestation_ca_list.as_ref() {
             if ca_list.is_empty() {
                 return Err(WebauthnError::MissingAttestationCaList);
@@ -894,7 +902,7 @@ impl Webauthn {
             .user_verification_policy(policy)
             .reject_synchronised_authenticators(false)
             .exclude_credentials(exclude_credentials)
-            .hints(Some(vec![PublicKeyCredentialHints::SecurityKey]))
+            .hints(Some(vec![PublicKeyCredentialHints::Hybrid]))
             .extensions(extensions);
 
         self.core
