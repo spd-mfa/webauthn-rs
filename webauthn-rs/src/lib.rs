@@ -1027,6 +1027,7 @@ impl Webauthn {
             Some(UserVerificationPolicy::Preferred)
         };
 
+        // let hints = Some(vec![PublicKeyCredentialHints::SecurityKey]);
         let hints = None;
 
         self.core
