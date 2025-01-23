@@ -1029,7 +1029,7 @@ impl Webauthn {
             Some(UserVerificationPolicy::Preferred)
         };
 
-        let hints = Some(vec![PublicKeyCredentialHints::SecurityKey]);
+        let hints = Some(vec![PublicKeyCredentialHints::ClientDevice]);
        
 
         debug!("Extensions: {:?}", extensions);
