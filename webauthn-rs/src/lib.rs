@@ -956,6 +956,7 @@ impl Webauthn {
         &self,
         creds: &[SecurityKey],
     ) -> WebauthnResult<(RequestChallengeResponse, SecurityKeyAuthentication)> {
+        debug!("Starting security key authentication");
         let extensions = None;
         let creds = creds.iter().map(|sk| sk.cred.clone()).collect();
         let allow_backup_eligible_upgrade = false;
@@ -1017,6 +1018,7 @@ impl Webauthn {
         creds: &[SecurityKey],
         custom: Option<BTreeMap<String, serde_cbor_2::Value>>
     ) -> WebauthnResult<(RequestChallengeResponse, SecurityKeyAuthentication)> {
+        debug!("Starting security key authentication with custom extensions");
         let extensions = custom.map(|custom| RequestAuthenticationExtensions { appid: None, uvm: None, hmac_get_secret: None, custom });
         let creds = creds.iter().map(|sk| sk.cred.clone()).collect();
         let allow_backup_eligible_upgrade = true;
@@ -1029,6 +1031,9 @@ impl Webauthn {
 
         // let hints = Some(vec![PublicKeyCredentialHints::SecurityKey]);
         let hints = None;
+
+        debug!("Extensions: {:?}", extensions);
+        debug!("Hints: {:?}", hints);
 
         self.core
             .new_challenge_authenticate_builder(creds, policy)
