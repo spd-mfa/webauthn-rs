@@ -888,6 +888,8 @@ impl Webauthn {
             UserVerificationPolicy::Preferred
         };
 
+        let ui_hint_authenticator_attachment = Some(AuthenticatorAttachment::CrossPlatform);
+
         let builder = self
             .core
             .new_challenge_register_builder(
