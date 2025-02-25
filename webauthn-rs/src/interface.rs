@@ -41,7 +41,8 @@ pub struct PasskeyRegistration {
     derive(Serialize, Deserialize)
 )]
 pub struct PasskeyAuthentication {
-    pub(crate) ast: AuthenticationState,
+    /// Made public so we can can call set_allowed_credentials on its interior type
+    pub ast: AuthenticationState,
 }
 
 /// A Passkey for a user. A passkey is a term that covers all possible authenticators that may exist.
