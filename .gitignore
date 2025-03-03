@@ -6,3 +6,4 @@ webauthn-rs-demo-wasm/pkg
 local
 build.sh
 .direnv
+.idea
