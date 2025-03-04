@@ -587,7 +587,8 @@ impl Webauthn {
         user_display_name: &str,
         exclude_credentials: Option<Vec<CredentialID>>,
         hints: Option<Vec<PublicKeyCredentialHints>>,
-        ui_hint_authenticator_attachment: Option<AuthenticatorAttachment>
+        ui_hint_authenticator_attachment: Option<AuthenticatorAttachment>,
+        require_resident_key: bool,
     ) -> WebauthnResult<(CreationChallengeResponse, PasskeyRegistration)> {
         let extensions = Some(RequestRegistrationExtensions {
             cred_protect: Some(CredProtect {
@@ -614,7 +615,7 @@ impl Webauthn {
             )?
             .attestation(AttestationConveyancePreference::None)
             .credential_algorithms(self.algorithms.clone())
-            .require_resident_key(true)
+            .require_resident_key(require_resident_key)
             .authenticator_attachment(ui_hint_authenticator_attachment)
             .user_verification_policy(UserVerificationPolicy::Required)
             .reject_synchronised_authenticators(false)
