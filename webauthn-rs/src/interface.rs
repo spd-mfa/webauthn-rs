@@ -41,7 +41,7 @@ pub struct PasskeyRegistration {
     derive(Serialize, Deserialize)
 )]
 pub struct PasskeyAuthentication {
-    // Make public so we can call set_allowed_credentials on its interior type
+    /// Make public so we can call set_allowed_credentials on its interior type
     pub ast: AuthenticationState,
 }
 
