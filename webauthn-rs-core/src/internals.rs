@@ -187,19 +187,19 @@ impl Credential {
         let backup_eligible = auth_data.backup_eligible;
         let backup_state = auth_data.backup_state;
 
-        let transports = if attestation_format == AttestationFormat::Packed
-            || attestation_format == AttestationFormat::Tpm
-        {
-            transports.clone()
-        } else {
-            None
-        };
+        // let transports = if attestation_format == AttestationFormat::Packed
+        //     || attestation_format == AttestationFormat::Tpm
+        // {
+        //     transports.clone()
+        // } else {
+        //     None
+        // };
 
         Credential {
             cred_id: acd.credential_id.clone(),
             cred: ck,
             counter,
-            transports,
+            transports: transports.clone(),
             user_verified,
             backup_eligible,
             backup_state,
