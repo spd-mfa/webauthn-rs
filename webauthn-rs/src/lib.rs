@@ -577,6 +577,57 @@ impl Webauthn {
             .map(|(ccr, rs)| (ccr, PasskeyRegistration { rs }))
     }
 
+    /// Passkey registration, but with exposed parameters for hints and 
+    /// authenticator attachment, allowing customization of restrictions regarding
+    /// passkey vs platform authenticators.
+    pub fn start_passkey_registration2(
+        &self,
+        user_unique_id: Uuid,
+        user_name: &str,
+        user_display_name: &str,
+        exclude_credentials: Option<Vec<CredentialID>>,
+        hints: Option<Vec<PublicKeyCredentialHints>>,
+        ui_hint_authenticator_attachment: Option<AuthenticatorAttachment>,
+        require_resident_key: bool,
+    ) -> WebauthnResult<(CreationChallengeResponse, PasskeyRegistration)> {
+        let extensions = Some(RequestRegistrationExtensions {
+            cred_protect: Some(CredProtect {
+                // Since this may contain PII, we want to enforce this. We also
+                // want the device to strictly enforce its UV state.
+                credential_protection_policy: CredentialProtectionPolicy::UserVerificationRequired,
+                // If set to true, causes many authenticators to shit the bed. We have to just hope
+                // and pray instead. This is because many device classes when they see this extension
+                // and can't satisfy it, they fail the operation instead.
+                enforce_credential_protection_policy: Some(false),
+            }),
+            uvm: Some(true),
+            cred_props: Some(true),
+            min_pin_length: None,
+            hmac_create_secret: None,
+        });
+
+        let builder = self
+            .core
+            .new_challenge_register_builder(
+                user_unique_id.as_bytes(),
+                user_name,
+                user_display_name,
+            )?
+            .attestation(AttestationConveyancePreference::None)
+            .credential_algorithms(self.algorithms.clone())
+            .require_resident_key(require_resident_key)
+            .authenticator_attachment(ui_hint_authenticator_attachment)
+            .user_verification_policy(UserVerificationPolicy::Required)
+            .reject_synchronised_authenticators(false)
+            .exclude_credentials(exclude_credentials)
+            .hints(hints)
+            .extensions(extensions);
+
+        self.core
+            .generate_challenge_register(builder)
+            .map(|(ccr, rs)| (ccr, PasskeyRegistration { rs }))
+    }
+
     /// Initiate the registration of a 'Google Passkey stored in Google Password Manager' on an
     /// Android device with GMS Core.
     ///
@@ -693,6 +744,31 @@ impl Webauthn {
             .and_then(|b| self.core.generate_challenge_authenticate(b))
             .map(|(rcr, ast)| (rcr, PasskeyAuthentication { ast }))
     }
+
+    /// Passkey authentication with exposed hints allowing targeting of either 
+    /// passkeys or platform authenticators.
+    pub fn start_passkey_authentication2(
+        &self,
+        creds: &[Passkey],
+        hints: Option<Vec<PublicKeyCredentialHints>>
+    ) -> WebauthnResult<(RequestChallengeResponse, PasskeyAuthentication)> {
+        let extensions = None;
+        let creds = creds.iter().map(|sk| sk.cred.clone()).collect();
+        let policy = Some(UserVerificationPolicy::Required);
+        let allow_backup_eligible_upgrade = true;
+
+        self.core
+            .new_challenge_authenticate_builder(creds, policy)
+            .map(|builder| {
+                builder
+                    .extensions(extensions)
+                    .allow_backup_eligible_upgrade(allow_backup_eligible_upgrade)
+                    .hints(hints)
+            })
+            .and_then(|b| self.core.generate_challenge_authenticate(b))
+            .map(|(rcr, ast)| (rcr, PasskeyAuthentication { ast }))
+    }
+    
 
     /// Given the `PublicKeyCredential` returned by the user agent (e.g. a browser), and the stored [PasskeyAuthentication]
     /// complete the authentication of the user.
@@ -910,6 +986,85 @@ impl Webauthn {
             })
     }
 
+    /// Security key registration with hints exposed, 
+    /// allowing categorization of security keys vs unspecified webauthn devices.
+    #[allow(clippy::too_many_arguments)]
+    pub fn start_securitykey_registration2(
+        &self,
+        user_unique_id: Uuid,
+        user_name: &str,
+        user_display_name: &str,
+        exclude_credentials: Option<Vec<CredentialID>>,
+        attestation_ca_list: Option<AttestationCaList>,
+        ui_hint_authenticator_attachment: Option<AuthenticatorAttachment>,
+        hints: Option<Vec<PublicKeyCredentialHints>>
+    ) -> WebauthnResult<(CreationChallengeResponse, SecurityKeyRegistration)> {
+        let attestation = if let Some(ca_list) = attestation_ca_list.as_ref() {
+            if ca_list.is_empty() {
+                return Err(WebauthnError::MissingAttestationCaList);
+            } else {
+                AttestationConveyancePreference::Direct
+            }
+        } else {
+            AttestationConveyancePreference::None
+        };
+
+        let cred_protect = if self.user_presence_only_security_keys {
+            None
+        } else {
+            Some(CredProtect {
+                // We want the device to strictly enforce its UV state.
+                credential_protection_policy: CredentialProtectionPolicy::UserVerificationRequired,
+                // If set to true, causes many authenticators to shit the bed. Since this type doesn't
+                // have the same strict rules about attestation, then we just use this opportunistically.
+                enforce_credential_protection_policy: Some(false),
+            })
+        };
+
+        let extensions = Some(RequestRegistrationExtensions {
+            cred_protect,
+            uvm: Some(true),
+            cred_props: Some(true),
+            min_pin_length: None,
+            hmac_create_secret: None,
+        });
+
+        let policy = if self.user_presence_only_security_keys {
+            UserVerificationPolicy::Discouraged_DO_NOT_USE
+        } else {
+            UserVerificationPolicy::Preferred
+        };
+
+        let builder = self
+            .core
+            .new_challenge_register_builder(
+                user_unique_id.as_bytes(),
+                user_name,
+                user_display_name,
+            )?
+            .attestation(attestation)
+            .credential_algorithms(self.algorithms.clone())
+            .require_resident_key(false)
+            .authenticator_attachment(ui_hint_authenticator_attachment)
+            .user_verification_policy(policy)
+            .reject_synchronised_authenticators(false)
+            .exclude_credentials(exclude_credentials)
+            .hints(hints)
+            .extensions(extensions);
+
+        self.core
+            .generate_challenge_register(builder)
+            .map(|(ccr, rs)| {
+                (
+                    ccr,
+                    SecurityKeyRegistration {
+                        rs,
+                        ca_list: attestation_ca_list,
+                    },
+                )
+            })
+    }
+
     /// Complete the registration of the credential. The user agent (e.g. a browser) will return the data of `RegisterPublicKeyCredential`,
     /// and the server provides its paired [SecurityKeyRegistration]. The details of the Authenticator
     /// based on the registration parameters are asserted.
@@ -1015,9 +1170,10 @@ impl Webauthn {
     pub fn start_securitykey_with_custom_extensions_authentication(
         &self,
         creds: &[SecurityKey],
-        custom: Option<BTreeMap<String, serde_cbor_2::Value>>
+        hints: Option<Vec<PublicKeyCredentialHints>>,
+        custom_extensions: Option<BTreeMap<String, serde_cbor_2::Value>>
     ) -> WebauthnResult<(RequestChallengeResponse, SecurityKeyAuthentication)> {
-        let extensions = custom.map(|custom| RequestAuthenticationExtensions { appid: None, uvm: None, hmac_get_secret: None, custom });
+        let extensions = custom_extensions.map(|custom| RequestAuthenticationExtensions { appid: None, uvm: None, hmac_get_secret: None, custom });
         let creds = creds.iter().map(|sk| sk.cred.clone()).collect();
         let allow_backup_eligible_upgrade = true;
 
@@ -1026,8 +1182,6 @@ impl Webauthn {
         } else {
             Some(UserVerificationPolicy::Preferred)
         };
-
-        let hints = None;
 
         self.core
             .new_challenge_authenticate_builder(creds, policy)
