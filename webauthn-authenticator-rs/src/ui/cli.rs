@@ -17,7 +17,7 @@ pub struct Cli {}
 
 impl UiCallback for Cli {
     fn request_pin(&self) -> Option<String> {
-        rpassword::prompt_password_stderr("Enter PIN: ").ok()
+        rpassword::prompt_password("Enter PIN: ").ok()
     }
 
     fn request_touch(&self) {

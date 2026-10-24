@@ -76,7 +76,7 @@ impl MozillaAuthenticator {
                 }
 
                 Ok(StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))) => {
-                    let raw_pin = rpassword::prompt_password_stderr("Enter PIN: ")
+                    let raw_pin = rpassword::prompt_password("Enter PIN: ")
                         .expect("Failed to read PIN");
                     sender.send(Pin::new(&raw_pin)).expect("Failed to send PIN");
                     continue;
@@ -90,7 +90,7 @@ impl MozillaAuthenticator {
                             a
                         ))
                     );
-                    let raw_pin = rpassword::prompt_password_stderr("Enter PIN: ")
+                    let raw_pin = rpassword::prompt_password("Enter PIN: ")
                         .expect("Failed to read PIN");
                     sender.send(Pin::new(&raw_pin)).expect("Failed to send PIN");
                     continue;
