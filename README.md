@@ -1,6 +1,13 @@
 Webauthn-rs
 ==========
 
+> **Note:** This is an independently maintained fork of
+> [kanidm/webauthn-rs](https://github.com/kanidm/webauthn-rs). It is not
+> affiliated with or endorsed by the Kanidm project. Changes in this fork may
+> have been made with AI assistance, which upstream does not accept; please do
+> not submit changes from this fork upstream. This fork remains licensed under
+> the Mozilla Public License 2.0 (see [LICENSE.md](LICENSE.md)).
+
 Webauthn is a modern approach to hardware based authentication, consisting of
 a user with an authenticator device, a browser or client that interacts with the
 device, and a server that is able to generate challenges and verify the
